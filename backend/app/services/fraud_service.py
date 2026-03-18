@@ -51,12 +51,14 @@ DOCUMENTS LIÉS DU MÊME FOURNISSEUR (pour comparaison croisée) :
 
 Si aucun document lié n'est disponible, ne vérifie que les règles autonomes.
 
+Le champ 'type' de chaque incohérence DOIT correspondre EXACTEMENT au code entre crochets de la règle enfreinte (ex: TVA_ERROR, SIRET_MISMATCH).
+
 Réponds UNIQUEMENT avec ce JSON (sans markdown ni explication) :
 {{
   "has_inconsistencies": true,
   "inconsistencies": [
     {{
-      "type": "TYPE",
+      "type": "CODE_EXACT_DE_LA_REGLE",
       "severity": "LOW|MEDIUM|HIGH|CRITICAL",
       "description": "Description précise en français",
       "field_source": "champ_source",
@@ -101,9 +103,10 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown ni explication) :
 
         instructions = []
         for rule in rules:
+            code = rule.get("code", "UNKNOWN_CODE")
             cj = rule.get("condition_json") or {}
             text = cj.get("prompt_instruction") or rule.get("description", rule.get("name", ""))
-            instructions.append(text)
+            instructions.append(f"[{code}] : {text}")
 
         return f"{separator}\n{title}\n{separator}\n\n" + "\n\n".join(instructions)
 
