@@ -165,6 +165,20 @@ export const fraudRulesApi = {
   },
 };
 
+// ── Export ─────────────────────────────────────────────────────────────────
+
+export const exportApi = {
+  documentPdf: (id: string) => {
+    window.open(`${API_URL}/api/documents/${id}/export/pdf`, "_blank");
+  },
+  complianceExcel: () => {
+    window.open(`${API_URL}/api/compliance/export/excel`, "_blank");
+  },
+  suppliersExcel: () => {
+    window.open(`${API_URL}/api/suppliers/export/excel`, "_blank");
+  },
+};
+
 // ── Stats ──────────────────────────────────────────────────────────────────
 
 export const statsApi = {

@@ -1,7 +1,7 @@
 "use client";
 import { use } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, RefreshCw, ExternalLink, Clock, ShieldAlert } from "lucide-react";
+import { ArrowLeft, RefreshCw, ExternalLink, Clock, ShieldAlert, FileDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ExtractionPanel } from "@/components/documents/ExtractionPanel";
 import { FraudAlert } from "@/components/documents/FraudAlert";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useDocument } from "@/hooks/useDocuments";
 import { useUpdateAlert, useAlerts } from "@/hooks/useDocuments";
+import { exportApi } from "@/lib/api";
 import { formatDate, STATUS_LABELS, STATUS_COLORS, TYPE_LABELS, isProcessingStatus } from "@/lib/utils";
 import type { FieldWithConfidence } from "@/lib/types";
 
@@ -120,10 +121,18 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="w-4 h-4" />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-2">
+          {document.status === "DONE" && (
+            <Button variant="secondary" size="sm" onClick={() => exportApi.documentPdf(id)}>
+              <FileDown className="w-4 h-4" />
+              Exporter PDF
+            </Button>
+          )}
+          <Button variant="secondary" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
+          </Button>
+        </div>
       </motion.div>
 
       {/* Processing state */}
