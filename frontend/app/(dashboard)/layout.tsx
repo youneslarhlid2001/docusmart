@@ -15,6 +15,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -34,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="w-64 flex-shrink-0 flex flex-col border-r border-[var(--border)]"
-        style={{ background: "rgba(10, 10, 15, 0.9)", backdropFilter: "blur(20px)" }}>
+        style={{ background: "var(--bg-secondary)", backdropFilter: "blur(20px)" }}>
         {/* Logo */}
         <div className="p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
@@ -94,12 +95,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto flex flex-col">
+        {/* Topbar */}
+        <div className="flex-shrink-0 h-14 flex items-center justify-end px-6 border-b border-[var(--border)]"
+          style={{ background: "var(--bg-secondary)", backdropFilter: "blur(20px)" }}>
+          <ThemeToggle />
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="h-full"
+          className="flex-1"
         >
           {children}
         </motion.div>
