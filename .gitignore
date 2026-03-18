@@ -1,6 +1,13 @@
 credentials.json
+trello_import.py
 .env
 *.env
 .DS_Store
 __pycache__/
 *.pyc
+
+# Node
+node_modules/
+.next/
+out/
+dist/
