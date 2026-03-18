@@ -1,8 +1,13 @@
 import uuid
 from datetime import datetime, date, timedelta
+from io import BytesIO
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from app.api.deps import get_db
 from app.models.alert import ComplianceAlert
 from app.models.document import Document
@@ -70,6 +75,67 @@ async def update_alert(
     await db.commit()
     await db.refresh(alert)
     return alert
+
+
+@router.get("/compliance/export/excel")
+async def export_alerts_excel(db: AsyncSession = Depends(get_db)):
+    """Exporte toutes les alertes de conformité au format Excel."""
+    result = await db.execute(
+        select(ComplianceAlert).order_by(ComplianceAlert.created_at.desc())
+    )
+    alerts = result.scalars().all()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Alertes de conformité"
+
+    header_fill = PatternFill("solid", fgColor="6366F1")
+    header_font = Font(color="FFFFFF", bold=True)
+    thin_border = Border(
+        left=Side(style="thin", color="E2E8F0"),
+        right=Side(style="thin", color="E2E8F0"),
+        top=Side(style="thin", color="E2E8F0"),
+        bottom=Side(style="thin", color="E2E8F0"),
+    )
+    alt_fill = PatternFill("solid", fgColor="F8FAFC")
+
+    headers = ["ID", "Type alerte", "Sévérité", "Statut", "Description", "Document ID", "Créé le", "Résolu le"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = thin_border
+
+    for row_idx, alert in enumerate(alerts, 2):
+        fill = alt_fill if row_idx % 2 == 0 else None
+        values = [
+            str(alert.id),
+            alert.alert_type or "—",
+            alert.severity,
+            alert.status,
+            alert.description or "—",
+            str(alert.document_id),
+            str(alert.created_at)[:19] if alert.created_at else "—",
+            str(alert.resolved_at)[:19] if alert.resolved_at else "—",
+        ]
+        for col, value in enumerate(values, 1):
+            cell = ws.cell(row=row_idx, column=col, value=value)
+            cell.border = thin_border
+            if fill:
+                cell.fill = fill
+
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 22
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="alertes_conformite.xlsx"'},
+    )
 
 
 @router.get("/stats", response_model=StatsRead)

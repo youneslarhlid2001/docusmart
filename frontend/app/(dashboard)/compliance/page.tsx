@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, ShieldAlert, CheckCircle, XCircle, AlertTriangle, Filter } from "lucide-react";
+import { ShieldCheck, ShieldAlert, CheckCircle, XCircle, AlertTriangle, Filter, FileDown } from "lucide-react";
 import { FraudAlert } from "@/components/documents/FraudAlert";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useAlerts, useUpdateAlert, useStats } from "@/hooks/useDocuments";
+import { exportApi } from "@/lib/api";
 
 // Gauge chart simple avec SVG
 function ComplianceGaugeChart({ score }: { score: number }) {
@@ -86,6 +87,10 @@ export default function CompliancePage() {
             Gestion des incohérences documentaires
           </p>
         </div>
+        <Button variant="secondary" size="sm" onClick={() => exportApi.complianceExcel()}>
+          <FileDown className="w-4 h-4" />
+          Exporter Excel
+        </Button>
       </motion.div>
 
       {/* Score + stats */}

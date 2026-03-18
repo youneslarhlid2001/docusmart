@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Building2, FileText, ShieldCheck, ChevronRight, TrendingDown } from "lucide-react";
+import { Building2, FileText, ShieldCheck, ChevronRight, TrendingDown, FileDown } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSuppliers, useSupplierDocuments } from "@/hooks/useDocuments";
+import { exportApi } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import type { Supplier } from "@/lib/types";
 
@@ -93,13 +94,20 @@ export default function CRMPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold text-[var(--text-primary)] font-[Syne]">
-          CRM Fournisseurs
-        </h1>
-        <p className="text-[var(--text-secondary)] mt-1">
-          {suppliers.length} fournisseur(s) référencé(s)
-        </p>
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] font-[Syne]">
+            CRM Fournisseurs
+          </h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            {suppliers.length} fournisseur(s) référencé(s)
+          </p>
+        </div>
+        <Button variant="secondary" size="sm" onClick={() => exportApi.suppliersExcel()}>
+          <FileDown className="w-4 h-4" />
+          Exporter Excel
+        </Button>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
