@@ -5,8 +5,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ShieldCheck, Plus, Trash2, ToggleLeft, ToggleRight,
   ChevronDown, ChevronUp, Lock, Zap, GitBranch,
-  Building2, Heart, ShoppingCart, Globe, X, Save, AlertTriangle,
+  Building2, Heart, ShoppingCart, Globe, X, Save, AlertTriangle, ShieldOff,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { fraudRulesApi } from "@/lib/api";
 import type { FraudRule, FraudRuleCreate, AlertSeverity, RuleCategory } from "@/lib/types";
 
@@ -353,7 +354,7 @@ function NewRuleModal({ onClose, onCreate }: {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function RulesPage() {
+function RulesContent() {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [filterSector, setFilterSector] = useState<string>("ALL");
@@ -590,4 +591,30 @@ export default function RulesPage() {
       </AnimatePresence>
     </div>
   );
+}
+
+// ── Export Page avec garde de rôle ────────────────────────────────────────────
+
+export default function RulesPage() {
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role ?? "VIEWER";
+
+  if (role !== "ADMIN") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+          <ShieldOff className="w-8 h-8 text-red-400" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)] font-[Syne]">Accès restreint</h2>
+        <p className="text-[var(--text-secondary)] text-sm text-center max-w-xs">
+          La gestion des règles de fraude est réservée aux administrateurs.
+        </p>
+        <span className="text-xs font-mono px-2 py-1 rounded-full border bg-red-500/10 border-red-500/30 text-red-400">
+          Rôle requis : ADMIN
+        </span>
+      </div>
+    );
+  }
+
+  return <RulesContent />;
 }
