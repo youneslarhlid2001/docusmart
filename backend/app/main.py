@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.db.database import create_tables
-from app.api.routes import documents, upload, processing, suppliers, compliance, fraud_rules
+from app.api.routes import documents, upload, processing, suppliers, compliance, fraud_rules, auth
 
 settings = get_settings()
 
@@ -48,6 +48,7 @@ app.include_router(processing.router, prefix="/api", tags=["processing"])
 app.include_router(suppliers.router, prefix="/api", tags=["suppliers"])
 app.include_router(compliance.router, prefix="/api", tags=["compliance"])
 app.include_router(fraud_rules.router, prefix="/api", tags=["fraud-rules"])
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 
 
 @app.get("/health")

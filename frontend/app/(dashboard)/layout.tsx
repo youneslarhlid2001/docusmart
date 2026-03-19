@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Upload,
@@ -13,23 +14,36 @@ import {
   Network,
   SlidersHorizontal,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/upload", label: "Upload", icon: Upload },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/crm", label: "Fournisseurs", icon: Users },
-  { href: "/compliance", label: "Conformité", icon: ShieldCheck },
-  { href: "/rules", label: "Règles fraude", icon: SlidersHorizontal },
-  { href: "/analytics", label: "Analytique", icon: BarChart3 },
-  { href: "/architecture", label: "Architecture", icon: Network },
+const ROLE_COLORS: Record<string, string> = {
+  ADMIN: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+  ANALYST: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+  VIEWER: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+};
+
+const ALL_NAV_ITEMS = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/upload", label: "Upload", icon: Upload, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/documents", label: "Documents", icon: FileText, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/crm", label: "Fournisseurs", icon: Users, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/compliance", label: "Conformité", icon: ShieldCheck, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/rules", label: "Règles fraude", icon: SlidersHorizontal, roles: ["ADMIN"] },
+  { href: "/analytics", label: "Analytique", icon: BarChart3, roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { href: "/architecture", label: "Architecture", icon: Network, roles: ["ADMIN", "ANALYST", "VIEWER"] },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role ?? "VIEWER";
+  const userName = session?.user?.name ?? "Utilisateur";
+
+  const navItems = ALL_NAV_ITEMS.filter((item) => item.roles.includes(role));
+  const initials = userName.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex min-h-screen">
@@ -53,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href}>
@@ -80,16 +94,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Footer */}
+        {/* Footer — user info + sign out */}
         <div className="p-4 border-t border-[var(--border)]">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 flex items-center justify-center border border-indigo-500/30">
-              <span className="text-xs font-bold text-indigo-300">DS</span>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 flex items-center justify-center border border-indigo-500/30 flex-shrink-0">
+              <span className="text-xs font-bold text-indigo-300">{initials}</span>
             </div>
-            <div>
-              <p className="text-xs font-medium text-[var(--text-primary)]">DocuSmart</p>
-              <p className="text-xs text-[var(--text-secondary)]">v1.0.0</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-[var(--text-primary)] truncate">{userName}</p>
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${ROLE_COLORS[role] ?? ROLE_COLORS.VIEWER}`}>
+                {role}
+              </span>
             </div>
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              title="Se déconnecter"
+              className="p-1.5 rounded-lg hover:bg-red-500/20 text-[var(--text-secondary)] hover:text-red-400 transition-colors flex-shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </aside>

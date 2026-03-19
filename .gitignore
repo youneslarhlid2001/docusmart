@@ -6,6 +6,9 @@ trello_import.py
 __pycache__/
 *.pyc
 
+# Antigravity/AI folders
+.agent/
+
 # Node
 node_modules/
 .next/
