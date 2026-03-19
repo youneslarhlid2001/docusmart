@@ -1,4 +1,5 @@
 credentials.json
+trello_import.py
 .env
 *.env
 .DS_Store
@@ -7,3 +8,9 @@ __pycache__/
 
 # Antigravity/AI folders
 .agent/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
