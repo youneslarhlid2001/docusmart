@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldCheck, ShieldAlert, CheckCircle, XCircle, AlertTriangle, Filter, FileDown } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Filter, FileDown } from "lucide-react";
 import { FraudAlert } from "@/components/documents/FraudAlert";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { useAlerts, useUpdateAlert, useStats } from "@/hooks/useDocuments";
 import { exportApi } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/lib/toast";
 
 // Gauge chart simple avec SVG
 function ComplianceGaugeChart({ score }: { score: number }) {
@@ -64,6 +66,11 @@ export default function CompliancePage() {
   const [statusFilter, setStatusFilter] = useState("OPEN");
   const [severityFilter, setSeverityFilter] = useState("");
 
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string })?.role ?? "VIEWER";
+  const canValidate = role === "ADMIN" || role === "ANALYST";
+  const { toast } = useToast();
+
   const { data: alerts = [], isLoading } = useAlerts({
     status: statusFilter || undefined,
     severity: severityFilter || undefined,
@@ -74,6 +81,22 @@ export default function CompliancePage() {
   const criticalCount = alerts.filter((a) => a.severity === "CRITICAL").length;
   const highCount = alerts.filter((a) => a.severity === "HIGH").length;
   const openCount = alerts.filter((a) => a.status === "OPEN").length;
+
+  const handleResolve = (id: string) => {
+    if (!canValidate) {
+      toast("Accès restreint — la validation manuelle requiert le rôle ANALYST ou ADMIN.", "warning");
+      return;
+    }
+    updateAlert.mutate({ id, status: "RESOLVED" });
+  };
+
+  const handleFalsePositive = (id: string) => {
+    if (!canValidate) {
+      toast("Accès restreint — la validation manuelle requiert le rôle ANALYST ou ADMIN.", "warning");
+      return;
+    }
+    updateAlert.mutate({ id, status: "FALSE_POSITIVE" });
+  };
 
   return (
     <div className="p-8 space-y-6">
@@ -120,6 +143,18 @@ export default function CompliancePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Bannière read-only pour VIEWER */}
+      {role === "VIEWER" && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm"
+        >
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          Mode lecture seule — la validation manuelle est réservée aux rôles ANALYST et ADMIN.
+        </motion.div>
+      )}
 
       {/* Filtres */}
       <div className="glass-card p-4 flex items-center gap-3 flex-wrap">
@@ -175,8 +210,8 @@ export default function CompliancePage() {
             >
               <FraudAlert
                 alert={alert}
-                onResolve={alert.status === "OPEN" ? (id) => updateAlert.mutate({ id, status: "RESOLVED" }) : undefined}
-                onFalsePositive={alert.status === "OPEN" ? (id) => updateAlert.mutate({ id, status: "FALSE_POSITIVE" }) : undefined}
+                onResolve={alert.status === "OPEN" ? handleResolve : undefined}
+                onFalsePositive={alert.status === "OPEN" ? handleFalsePositive : undefined}
               />
             </motion.div>
           ))}
